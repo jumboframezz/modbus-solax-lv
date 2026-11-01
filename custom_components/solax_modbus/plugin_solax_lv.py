@@ -1605,7 +1605,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
     SolaXModbusSensorEntityDescription(
         name="Charge 3 Start",
         key="charge_3_start",
-        register=0x2580,
+        register=0x2588,
         scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
@@ -1613,7 +1613,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
     SolaXModbusSensorEntityDescription(
         name="Charge 3 Stop",
         key="charge_3_stop",
-        register=0x2581,
+        register=0x2589,
         scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
@@ -1621,7 +1621,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
     SolaXModbusSensorEntityDescription(
         name="Discharge 3 Start",
         key="discharge_3_start",
-        register=0x2582,
+        register=0x258A,
         scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
@@ -1629,7 +1629,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
     SolaXModbusSensorEntityDescription(
         name="Discharge 3 Stop",
         key="discharge_3_stop",
-        register=0x2583,
+        register=0x258B,
         scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
@@ -2315,7 +2315,7 @@ TIME_TYPES = [
     SolaXModbusTimeEntityDescription(
         name="Charge 3 Start",
         key="charge_3_start",
-        register=0x2580,
+        register=0x2588,
         option_dict=TIME_OPTIONS_GEN4,
         allowedtypes=AC | HYBRID | GEN2,
         entity_category=EntityCategory.CONFIG,
@@ -2324,7 +2324,7 @@ TIME_TYPES = [
     SolaXModbusTimeEntityDescription(
         name="Charge 3 Stop",
         key="charge_3_stop",
-        register=0x2581,
+        register=0x2589,
         option_dict=TIME_OPTIONS_GEN4,
         allowedtypes=AC | HYBRID | GEN2,
         entity_category=EntityCategory.CONFIG,
@@ -2333,7 +2333,7 @@ TIME_TYPES = [
     SolaXModbusTimeEntityDescription(
         name="Discharge 3 Start",
         key="discharge_3_start",
-        register=0x2582,
+        register=0x258A,
         option_dict=TIME_OPTIONS_GEN4,
         allowedtypes=AC | HYBRID | GEN2,
         entity_category=EntityCategory.CONFIG,
@@ -2342,7 +2342,7 @@ TIME_TYPES = [
     SolaXModbusTimeEntityDescription(
         name="Discharge 3 Stop",
         key="discharge_3_stop",
-        register=0x2583,
+        register=0x258B,
         option_dict=TIME_OPTIONS_GEN4,
         allowedtypes=AC | HYBRID | GEN2,
         entity_category=EntityCategory.CONFIG,
