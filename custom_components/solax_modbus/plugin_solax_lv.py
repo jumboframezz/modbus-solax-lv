@@ -319,6 +319,29 @@ class SolaXModbusTimeEntityDescription(BaseModbusTimeEntityDescription):
 # ====================================== Computed value functions  =================================================
 
 
+# X1-Lite-LV / GEN2 stores time as:
+#   high byte = hour
+#   low byte  = minute
+#
+# Example:
+#   0x171E -> 23:30
+#   0x0600 -> 06:00
+#
+# Do not change value_function_gen4time in const.py because it is shared
+# with other inverter plugins.
+def value_function_lv_time(
+    initval: Any,
+    descr: Any,
+    datadict: dict[str, Any],
+) -> str:
+    """Parse X1-Lite-LV packed time (HH in high byte, MM in low byte)."""
+    h = (int(initval) >> 8) & 0xFF
+    m = int(initval) & 0xFF
+    return f"{h:02d}:{m:02d}"
+
+
+
+
 def autorepeat_function_remotecontrol_recompute(initval: int, descr: Any, datadict: dict[str, Any]) -> dict[str, Any]:
     """Remote control power calculations for SolaX inverters - Redesigned Implementation.
 
@@ -1519,7 +1542,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
     SolaXModbusSensorEntityDescription(
         key="charge_1_start",
         register=0x2580,
-        scale=value_function_gen4time,
+        scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
     ),
@@ -1527,7 +1550,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Charge 1 Stop",
         key="charge_1_stop",
         register=0x2581,
-        scale=value_function_gen4time,
+        scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
     ),
@@ -1535,7 +1558,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Discharge 1 Start",
         key="discharge_1_start",
         register=0x2582,
-        scale=value_function_gen4time,
+        scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
     ),
@@ -1543,7 +1566,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Discharge 1 Stop",
         key="discharge_1_stop",
         register=0x2583,
-        scale=value_function_gen4time,
+        scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
     ),
@@ -1551,7 +1574,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Charge 2 Start",
         key="charge_2_start",
         register=0x2584,
-        scale=value_function_gen4time,
+        scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
     ),
@@ -1559,7 +1582,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Charge 2 Stop",
         key="charge_2_stop",
         register=0x2585,
-        scale=value_function_gen4time,
+        scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
     ),
@@ -1567,7 +1590,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Discharge 2 Start",
         key="discharge_2_start",
         register=0x2586,
-        scale=value_function_gen4time,
+        scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
     ),
@@ -1575,7 +1598,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Discharge 2 Stop",
         key="discharge_2_stop",
         register=0x2587,
-        scale=value_function_gen4time,
+        scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
     ),
@@ -1583,7 +1606,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Charge 3 Start",
         key="charge_3_start",
         register=0x2580,
-        scale=value_function_gen4time,
+        scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
     ),
@@ -1591,7 +1614,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Charge 3 Stop",
         key="charge_3_stop",
         register=0x2581,
-        scale=value_function_gen4time,
+        scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
     ),
@@ -1599,7 +1622,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Discharge 3 Start",
         key="discharge_3_start",
         register=0x2582,
-        scale=value_function_gen4time,
+        scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
     ),
@@ -1607,7 +1630,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Discharge 3 Stop",
         key="discharge_3_stop",
         register=0x2583,
-        scale=value_function_gen4time,
+        scale=value_function_lv_time,
         allowedtypes=AC | HYBRID | GEN2,
         internal=True,
     ),
@@ -2354,7 +2377,7 @@ class solax_lv_plugin(plugin_base):
         if seriesnumber.startswith("HL1060"):
             invertertype = HYBRID | GEN | X1  # X1-Hybrid-LV 6kW
             self.inverter_model = f"X1-Hybrid-LV {seriesnumber[4:5]}.{seriesnumber[5:6]}kW"
-        elif seriesnumber.startswith("10J080"):
+        elif seriesnumber.startswith("10J0C0"):
             invertertype = HYBRID | GEN2 | X1  # X1-Lite-LV 6kW
             self.inverter_model = f"X1-Lite-LV {seriesnumber[4:5]}.{seriesnumber[5:6]}kW"
         else:
