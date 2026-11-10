@@ -2237,6 +2237,22 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    SolaXModbusSensorEntityDescription(
+        name="Grid Power CT1",
+        key="grid_power_ct1",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        register=0x068E,
+        register_type=REG_INPUT,
+        register_data_type=REGISTER_S16,
+        scale=1,
+        rounding=0,
+        allowedtypes=HYBRID | GEN2 | X1,
+        scan_group=SCAN_GROUP_FAST,
+        entity_registry_enabled_default=True,
+        icon="mdi:transmission-tower",
+    ),
 ]
 
 TIME_TYPES = [
