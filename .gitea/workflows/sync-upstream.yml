@@ -9,7 +9,7 @@ on:
 jobs:
   sync:
     name: Merge upstream/main into uat
-    runs-on: ubuntu-latest
+    runs-on: node22
 
     steps:
       - name: Configure SSH
