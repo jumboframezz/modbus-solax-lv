@@ -1,0 +1,80 @@
+
+name: Sync upstream main to UAT
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+
+jobs:
+  sync:
+    name: Merge upstream/main into uat
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SYNC_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SYNC_KNOWN_HOSTS }}
+        run: |
+          set -eu
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+          cat >> ~/.ssh/config <<'EOF'
+          Host code-bi.lz1lgg.eu
+            HostName code-bi.lz1lgg.eu
+            Port 2222
+            User git
+            IdentityFile ~/.ssh/id_ed25519
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+          EOF
+
+      - name: Clone UAT repository
+        run: |
+          git clone --branch uat \
+            ssh://git@code-bi.lz1lgg.eu:2222/python/modbus-solax-lv.git \
+            repository
+
+      - name: Fetch upstream main
+        working-directory: repository
+        run: |
+          git remote add upstream \
+            https://github.com/wills106/homeassistant-solax-modbus.git
+
+          git fetch upstream main
+
+      - name: Configure Git identity
+        working-directory: repository
+        run: |
+          git config user.name "Gitea Actions"
+          git config user.email "actions@code-bi.lz1lgg.eu"
+
+      - name: Merge upstream into UAT
+        working-directory: repository
+        run: |
+          set -eu
+
+          git checkout uat
+
+          if git merge-base --is-ancestor FETCH_HEAD HEAD; then
+            echo "UAT already contains upstream/main"
+            exit 0
+          fi
+
+          git merge --no-edit \
+            -m "chore: merge upstream/main into uat" \
+            FETCH_HEAD
+
+      - name: Push changes to code-bi UAT
+        working-directory: repository
+        run: |
+          git push origin HEAD:uat
