@@ -62,7 +62,6 @@ from custom_components.solax_modbus.const import (
     plugin_base,
     scale_function_clamp_positive,
     value_function_disable_enable,
-    value_function_disabled_enabled,
     value_function_enable_disable,
     value_function_gain_offset,
     value_function_gen4time,
@@ -77,6 +76,9 @@ from custom_components.solax_modbus.const import (
 
 from .pymodbus_compat import DataType, convert_from_registers
 from .solax_faults import (
+    GEN2_X1_CHARGER_FAULTS,
+    GEN2_X1_INVERTER_FAULTS,
+    GEN2_X1_MANAGER_FAULTS,
     GEN3_MANAGER_FAULTS,
     GEN3_X1_INVERTER_FAULTS,
     GEN3_X3_INVERTER_FAULTS,
@@ -2336,7 +2338,7 @@ MAX_CURRENTS: list[tuple[str, int | float]] = [
     ("H3BF", 60),  # Gen5 X3 Ultra F
     ("H3BG", 60),  # Gen5 X3 Ultra G
     ("10K", 50),  # Gen6 X3-Pro-G4
-    ("8021", 80),  # X3-Aelio #1555
+    ("8021", 160),  # X3-Aelio #1555: 160 A = 80 A x 2 battery ports
     ### All known Inverters added
 ]
 
@@ -4708,12 +4710,31 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
             icon="mdi:alert-circle-outline",
         )
         for generation, phases, min_version, max_version, fault_bits in (
+            (GEN2, X1, None, None, GEN2_X1_INVERTER_FAULTS),
             (GEN3, X1, None, None, GEN3_X1_INVERTER_FAULTS),
             (GEN3, X3, None, None, GEN3_X3_INVERTER_FAULTS),
             (GEN4, X1, 1, 99, GEN4_X1_INVERTER_FAULTS),
             (GEN4, X3, 1, 99, GEN4_X3_INVERTER_FAULTS),
             (GEN4, X3, 100, None, GEN4_X3_ESS_INVERTER_FAULTS),
         )
+    ],
+    *[
+        SolaXModbusSensorEntityDescription(
+            name="Charger Errors",
+            key="charger_errors",
+            register=0x42,
+            register_type=REG_INPUT,
+            register_data_type=REGISTER_U16,
+            rounding=0,
+            fault_bits=fault_bits,
+            allowedtypes=HYBRID | generation | phases,
+            modbus_min=min_version,
+            modbus_max=max_version,
+            sleepmode=SLEEPMODE_NONE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            icon="mdi:alert-circle-outline",
+        )
+        for generation, phases, min_version, max_version, fault_bits in ((GEN2, X1, None, None, GEN2_X1_CHARGER_FAULTS),)
     ],
     *[
         SolaXModbusSensorEntityDescription(
@@ -4732,6 +4753,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
             icon="mdi:alert-circle-outline",
         )
         for generation, phases, min_version, max_version, fault_bits in (
+            (GEN2, X1, None, None, GEN2_X1_MANAGER_FAULTS),
             (GEN3, X1 | X3, None, None, GEN3_MANAGER_FAULTS),
             (GEN4, X1 | X3, 1, 99, GEN4_MANAGER_FAULTS),
             (GEN4, X3, 100, None, GEN4_X3_ESS_MANAGER_FAULTS),
@@ -4777,7 +4799,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="MateBox enabled",
         key="matebox_enabled",
         register=0x1E,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         entity_registry_enabled_default=False,
         allowedtypes=HYBRID | GEN4 | GEN5,
         icon="mdi:dip-switch",
@@ -5491,7 +5516,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         register=0xBB,
         scale={
             0: "English",
-            1: "Deutsche",
+            1: "Deutsch",
             2: "Francais",
             3: "Polskie",
             4: "Espanol",
@@ -5551,7 +5576,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Grid Service",
         key="grid_service",
         register=0xFC,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         allowedtypes=HYBRID | GEN2,
     ),
     SolaXModbusSensorEntityDescription(
@@ -5582,7 +5610,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="wAS4777 Power Manager",
         key="was4777_power_manager",
         register=0x102,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         entity_registry_enabled_default=False,
         allowedtypes=AC | HYBRID | GEN3,
         icon="mdi:information",
@@ -5591,7 +5622,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="DRM Function Enable",
         key="drm_function_enable",
         register=0x102,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         entity_registry_enabled_default=False,
         allowedtypes=AC | HYBRID | GEN4 | GEN5,
     ),
@@ -5616,7 +5650,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Global MPPT Function",
         key="global_mppt_function",
         register=0x104,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         entity_registry_enabled_default=False,
         allowedtypes=HYBRID | GEN3,
         blacklist=["PRI"],  # X1-FIT has no DC MPPT input
@@ -5638,7 +5675,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Grid Service X3",
         key="grid_service_x3",
         register=0x105,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         allowedtypes=AC | HYBRID | GEN3 | X3,
     ),
     SolaXModbusSensorEntityDescription(
@@ -5675,7 +5715,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Meter Function",
         key="meter_function",
         register=0x108,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         entity_registry_enabled_default=False,
         allowedtypes=AC | HYBRID | GEN3 | GEN4 | GEN5 | GEN6,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -5726,7 +5769,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         key="eps_auto_restart",
         device_group="eps",
         register=0x10C,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         allowedtypes=HYBRID | GEN3 | EPS,
     ),
     SolaXModbusSensorEntityDescription(
@@ -5801,7 +5847,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Earth Detect X3",
         key="earth_detect_x3",
         register=0x114,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         allowedtypes=AC | HYBRID | GEN3 | X3,
     ),
     SolaXModbusSensorEntityDescription(
@@ -5873,7 +5922,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="FVRT Function",
         key="fvrt_function",
         register=0x116,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         entity_registry_enabled_default=False,
         allowedtypes=AC | HYBRID | GEN4 | GEN5,
     ),
@@ -5910,7 +5962,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Shut Down",
         key="shut_down",
         register=0x11C,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         entity_registry_enabled_default=False,
         allowedtypes=AC | HYBRID | GEN4 | GEN5,
     ),
@@ -5918,7 +5973,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         name="Micro Grid",
         key="micro_grid",
         register=0x11D,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         entity_registry_enabled_default=False,
         allowedtypes=AC | HYBRID | GEN4 | GEN5,
     ),
@@ -6589,7 +6647,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         key="dual_battery_1_expansion_readback",
         register=0x406,
         register_type=REG_HOLDING,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         allowedtypes=HYBRID | GEN5 | GEN6,
         modbus_min=100,
         entity_registry_enabled_default=False,
@@ -6600,7 +6661,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         key="dual_battery_2_expansion_readback",
         register=0x407,
         register_type=REG_HOLDING,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         allowedtypes=HYBRID | GEN5 | GEN6,
         modbus_min=100,
         entity_registry_enabled_default=False,
@@ -6611,7 +6675,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         key="dual_battery_1_heating_enable_readback",
         register=0x408,
         register_type=REG_HOLDING,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         allowedtypes=HYBRID | GEN5 | GEN6,
         modbus_min=100,
         entity_registry_enabled_default=False,
@@ -6622,7 +6689,10 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         key="dual_battery_2_heating_enable_readback",
         register=0x409,
         register_type=REG_HOLDING,
-        scale=value_function_disabled_enabled,
+        scale={
+            0: "Disabled",
+            1: "Enabled",
+        },
         allowedtypes=HYBRID | GEN5 | GEN6,
         modbus_min=100,
         entity_registry_enabled_default=False,
@@ -11650,7 +11720,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         register=0x319,
         scale={
             0: "English",
-            1: "Deutsche",
+            1: "Deutsch",
             2: "Polskie",
             3: "Francais",
             4: "Portugues",
@@ -11929,7 +11999,7 @@ SENSOR_TYPES_MAIN: list[SolaXModbusSensorEntityDescription] = [
         register=0x31E,
         scale={
             0: "English",
-            1: "Deutsche",
+            1: "Deutsch",
             2: "Polskie",
             3: "Francais",
             4: "Portugues",
@@ -14046,6 +14116,7 @@ ENERGY_DASHBOARD_MAPPING = EnergyDashboardMapping(
 EXTERNAL_SOURCE_TYPES: dict[str, UnitOfPower | None] = {
     "house_load": UnitOfPower.WATT,
     "measured_power": UnitOfPower.WATT,
+    "generator_power": UnitOfPower.WATT,
 }
 
 plugin_instance = solax_plugin(

@@ -78,6 +78,10 @@ SCAN_GROUP_FAST = CONF_SCAN_INTERVAL_FAST  # fast scanning (power,...)
 SCAN_GROUP_AUTO = "auto"  # _MEDIUM for temperatures, frequency and energy (kWh), otherwise _DEFAULT
 CONF_TIME_OUT = "time_out"
 DEFAULT_TIME_OUT = 5
+CONF_MODBUS_REQUEST_SUMMARY_INTERVAL = "modbus_request_summary_interval"
+DEFAULT_MODBUS_REQUEST_SUMMARY_INTERVAL = 0
+CONF_MODBUS_REQUEST_SUMMARY_RETRIES_ONLY = "modbus_request_summary_retries_only"
+DEFAULT_MODBUS_REQUEST_SUMMARY_RETRIES_ONLY = False
 # Seconds an active autorepeat control keeps re-sending its last command while a required input is invalid (e.g. after a Modbus read
 # timeout), measured from the last time every required input was valid. Beyond this the control is stopped. 0 stops immediately.
 CONF_AUTOREPEAT_INPUT_GRACE = "autorepeat_input_grace"
@@ -597,15 +601,6 @@ def value_function_battery_input_solis(initval: Any, descr: Any, datadict: dict[
     if inout == 0:
         return val
     return 0
-
-
-def value_function_disabled_enabled(initval: Any, descr: Any, datadict: dict[str, Any]) -> str:
-    """Convert 0/1 to Disabled/Enabled string."""
-    scale = {
-        0: "Disabled",
-        1: "Enabled",
-    }
-    return scale.get(initval, str(initval) + " Unknown Status")
 
 
 # This value function converts the bits to the number
